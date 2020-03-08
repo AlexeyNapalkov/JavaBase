@@ -107,17 +107,17 @@ public class TikTakToe {
             }
             stepCOUNTER--;
             // проверка
-            //1 в массиве построчно последовательность из Х или 0 в количестве равном VINLINE
+            //1 в массиве построкам и по столбцам ищем последовательность из Х или 0 в количестве равном или больше VINLINE
             for (int j = 1; j<=SIZE-VINLINE+1; j++){
                 int counterX = 0;
                 int counter0 = 0;
                 int counterX1 = 0;
                 int counter01 = 0;
-                for (int i = 1; i <=SIZE-VINLINE+1; i++){
-                    if (map[j][i].equals(DOT_X)){counterX++;}
-                    if (map[j][i].equals(DOT_0)){counter0++;}
-                    if (map[i][j].equals(DOT_X)){counterX1++;}
-                    if (map[i][j].equals(DOT_0)){counter01++;}
+                for (int i = 1; i <=SIZE; i++){
+                    if (map[j][i].equals(DOT_X)){counterX++;} else {counterX=0;} //X по строкам
+                    if (map[j][i].equals(DOT_0)){counter0++;} else {counter0=0;} // 0 по строкам
+                    if (map[i][j].equals(DOT_X)){counterX1++;} else {counterX1=0;} // Х по столбцам
+                    if (map[i][j].equals(DOT_0)){counter01++;} else {counter01=0;} // 0 по столбцам
                     if (counter0>=VINLINE || counter01>=VINLINE) {VIN = true; VINER = DOT_0;}
                     else {if (counterX>=VINLINE || counterX1>=VINLINE) {VIN = true; VINER = DOT_X;}
                             else {VIN = false; VINER = "никто";}
@@ -126,6 +126,7 @@ public class TikTakToe {
                 }
 
             }
+            //2 по диагоналям массива ищем последовательность Х или 0 в количестве равном или больше VINLINE
 
         }while (stepCOUNTER!=0 && !VIN);
 System.out.println("Выигал "+ VINER);
