@@ -1,6 +1,5 @@
 package lesson4;
 
-import java.util.Random;
 import java.util.Scanner;
 
 public class TikTakToe {
@@ -13,11 +12,13 @@ public class TikTakToe {
     public static final String DOT_X = "X ";
     public static final String DOT_0 = "0 ";
     public static final String EMPTY = "  ";
+    public static int lastStepJ; // строка последнего хода
+    public static int lastStepI; // столбец последжнего хода
 
 // рандом кто первый ходит 0 - Игрок - 1 - ИИ
     public static int nextPlayer = (int) (Math.random()*2+1);
-    public static String Player0;
-    public static String Player1;
+    public static String player0MARK;
+    public static String player1MARK;
     public static int userCorrectIn = 0;
     public static boolean userInOk = false;
     public static int stepCOUNTER = 0;
@@ -27,9 +28,9 @@ public class TikTakToe {
         System.out.println("Играем в креситики-нолики.");
 // пользователь выбирает ширину поля
         do {
-            System.out.println("Ведите ширину поля 3 - 5.");
+            System.out.println("Ведите ширину поля 3 - 9.");
             SIZE = userInput();
-        }while (SIZE < 3 || SIZE >5);
+        }while (SIZE < 3 || SIZE >9);
         System.out.println( "Играем на поле размером " + SIZE+"Х"+ SIZE);
         stepCOUNTER = SIZE*SIZE;
 
@@ -41,9 +42,8 @@ public class TikTakToe {
             } else VINLINE =3;
 
         }while ( VINLINE < 3 || VINLINE >SIZE);
-        System.out.println( "Победа достанется тому, то поставит на поле " + VINLINE+" в ряд!");
+        System.out.println( "Победа достанется тому, то поставит на поле " + VINLINE +" в ряд!");
         // инициализация массива с игровым полем
-        // инициализация массива решений
         String[][] map = new String[SIZE+1][SIZE+1] ;
         map [0][0] = EMPTY;
         for (int i = 1; i<=SIZE; i++ ){
@@ -56,18 +56,18 @@ public class TikTakToe {
             }
         }
 
-        nextPlayer = (int) (Math.random()*2+1);
+        nextPlayer = (int) (Math.random()*2);
         if (nextPlayer == 0) {
             System.out.println("Я тут подумал что ты ходишь первым!");
             nextPlayer = 0;
-            Player0 = DOT_X;
-            Player1 = DOT_0;
+            player0MARK = DOT_X;
+            player1MARK = DOT_0;
 
         }else {
             System.out.println("Я тут подумал, и решил сходить первым!");
             nextPlayer = 1;
-            Player0 = DOT_0;
-            Player1 = DOT_X;
+            player0MARK = DOT_0;
+            player1MARK = DOT_X;
         }
 
 
@@ -80,7 +80,7 @@ public class TikTakToe {
                 // ходит человек
                 System.out.println("Введи координаты своего хода");
 
-                // проверка правильности хода
+                // проверка правильности хода игрока
                 do {
                     userInOk = false;
                     System.out.println("Строка");
@@ -91,8 +91,10 @@ public class TikTakToe {
                         if (map[j][i].equals(DOT_EMPTY)) {
                             System.out.println("Хороший выбор!");
                             userInOk = true;
-                            map[j][i] = Player0;
-                            nextPlayer = 1;
+                            map[j][i] = player0MARK; // записываем на поле ход игрока
+                            VIN = checkVIN(map, player0MARK, j, i, VINLINE); // вызов метода проверки последнего хода на выигрыш
+                            VINER = "Ты играл за "+player0MARK;
+                            nextPlayer = 1; // переключаем цикл на ход компьютера
                         }else {
                             System.out.println("Ячейка уже занята! вводи снова.");
                         }
@@ -103,33 +105,151 @@ public class TikTakToe {
             }else{
                 // ходит ИИ
                 randomII(map);
+                VIN = checkVIN(map, player1MARK,lastStepJ,lastStepI, VINLINE);
+                VINER = "Я "+ player1MARK;
                 nextPlayer = 0;
             }
+
             stepCOUNTER--;
-            // проверка
-            //1 в массиве построкам и по столбцам ищем последовательность из Х или 0 в количестве равном или больше VINLINE
-            for (int j = 1; j<=SIZE-VINLINE+1; j++){
-                int counterX = 0;
-                int counter0 = 0;
-                int counterX1 = 0;
-                int counter01 = 0;
-                for (int i = 1; i <=SIZE; i++){
-                    if (map[j][i].equals(DOT_X)){counterX++;} else {counterX=0;} //X по строкам
-                    if (map[j][i].equals(DOT_0)){counter0++;} else {counter0=0;} // 0 по строкам
-                    if (map[i][j].equals(DOT_X)){counterX1++;} else {counterX1=0;} // Х по столбцам
-                    if (map[i][j].equals(DOT_0)){counter01++;} else {counter01=0;} // 0 по столбцам
-                    if (counter0>=VINLINE || counter01>=VINLINE) {VIN = true; VINER = DOT_0;}
-                    else {if (counterX>=VINLINE || counterX1>=VINLINE) {VIN = true; VINER = DOT_X;}
-                            else {VIN = false; VINER = "никто";}
-                    }
-
-                }
-
-            }
-            //2 по диагоналям массива ищем последовательность Х или 0 в количестве равном или больше VINLINE
-
         }while (stepCOUNTER!=0 && !VIN);
-System.out.println("Выигал "+ VINER);
+        if (VIN){
+            System.out.println(VINER + " и выигал эту игру");
+        }else {
+            System.out.println("Мы оба проиграли наше время!");
+        }
+
+drawMap(map);
+    }
+
+    public static boolean checkVIN(String[][] map, String playerMARK, int lastStepJ, int lastStepI, int vinLINE) {
+        // поиск выигрышной комбинации в строке
+        boolean rowVIN;
+        int VINcounter = 1;
+        int chkStep = 1;
+        boolean stopPLUS = false;
+        boolean stopMINUS = false;
+        do {
+            //проверяем возможность хода вправо на величину chkStep и если можем шагаем туда
+            if(lastStepI+chkStep<=SIZE&&!stopPLUS){
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ][lastStepI + chkStep].equals(playerMARK)){
+                    VINcounter++;
+                }else{
+                    stopPLUS = true;
+                }
+            }else {stopPLUS = true;}
+            // проверяем возможность хода влево на величину chkStep и если можно шагаем туда
+            if(lastStepI-chkStep>0&&!stopMINUS) {
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ][lastStepI - chkStep].equals(playerMARK)) {
+                    VINcounter++;
+                } else {
+                    stopMINUS = true;
+                }
+            }else {stopMINUS=true;}
+            chkStep++;
+            // если значение счетчика больше чем vinLINE-1 значит в строке содержится выигрышная комбинация
+            rowVIN = VINcounter > vinLINE-1;
+            
+        }while ( (chkStep < vinLINE -1)||!(stopMINUS&&stopPLUS));
+
+
+
+        // поиск выигрышной комбинации в колонке
+        boolean colVIN;
+        VINcounter = 1;
+        chkStep = 1;
+        stopPLUS = false;
+        stopMINUS = false;
+        do {
+            //проверяем возможность хода вниз на величину chkStep и если можем шагаем туда
+            if(lastStepJ+chkStep<=SIZE&&!stopPLUS){
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ + chkStep][lastStepI].equals(playerMARK)){
+                    VINcounter++;
+                }else{
+                    stopPLUS = true;
+                }
+            }else {stopPLUS=true;}
+            // проверяем возможность хода вверх на величину chkStep и если можно шагаем туда
+            if(lastStepJ-chkStep>0&&!stopMINUS){
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ - chkStep][lastStepI].equals(playerMARK)){
+                    VINcounter++;
+                }else{
+                    stopMINUS = true;
+                }
+            }else {stopMINUS=true;}
+            chkStep++;
+            // если значение счетчика больше чем vinLINE-1 значит в колонке содержится выигрышная комбинация
+            colVIN = VINcounter > vinLINE-1;
+
+        }while ( (chkStep < vinLINE -1)||!(stopMINUS&&stopPLUS));
+
+
+        // поиск выигрышной комбинации в правой диагонали
+        boolean rdiVIN;
+        VINcounter = 1;
+        chkStep = 1;
+        stopPLUS = false;
+        stopMINUS = false;
+        do {
+            //проверяем возможность хода вниз и в право на величину chkStep и если можем шагаем туда
+            if(lastStepJ+chkStep<=SIZE && lastStepI+chkStep <=SIZE &&!stopPLUS){
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ + chkStep][lastStepI + chkStep].equals(playerMARK)){
+                    VINcounter++;
+                }else{
+                    stopPLUS = true;
+                }
+            }else{stopPLUS=true;}
+            // проверяем возможность хода вверх и влево на величину chkStep и если можно шагаем туда
+            if((lastStepJ-chkStep)>0 && (lastStepI-chkStep)>0 && !stopMINUS){
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ - chkStep][lastStepI - chkStep].equals(playerMARK)){
+                    VINcounter++;
+                }else{
+                    stopMINUS = true;
+                }
+            }else{stopMINUS=true;}
+            chkStep++;
+            // если значение счетчика больше чем vinLINE-1 значит в колонке содержится выигрышная комбинация
+            rdiVIN = VINcounter > vinLINE-1;
+
+        }while ( (chkStep < vinLINE -1)||!(stopMINUS&&stopPLUS));
+
+        // поиск выигрышной комбинации в левой диагонали
+        boolean ldiVIN;
+        VINcounter = 1;
+        chkStep = 1;
+        stopPLUS = false;
+        stopMINUS = false;
+        do {
+            //проверяем возможность хода вверх и в право на величину chkStep и если можем шагаем туда
+            if(lastStepJ-chkStep>0 && lastStepI+chkStep <=SIZE &&!stopPLUS){
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ - chkStep][lastStepI + chkStep].equals(playerMARK)){
+                    VINcounter++;
+                }else{
+                    stopPLUS = true;
+                }
+            }else{stopPLUS=true;}
+            // проверяем возможность хода вниз и влево на величину chkStep и если можно шагаем туда
+            if((lastStepJ+chkStep)<=SIZE && (lastStepI-chkStep)>0 && !stopMINUS){
+                // сравниваем значение ячеки со сначением PlayerMARK если совпадает, то поле наше значит увеличиваем счетчик
+                if (map[lastStepJ + chkStep][lastStepI - chkStep].equals(playerMARK)){
+                    VINcounter++;
+                }else{
+                    stopMINUS = true;
+                }
+            }else{stopMINUS=true;}
+            chkStep++;
+            // если значение счетчика больше чем vinLINE-1 значит в колонке содержится выигрышная комбинация
+            ldiVIN = VINcounter > vinLINE-1;
+
+        }while ( (chkStep < vinLINE -1)||!(stopMINUS&&stopPLUS));
+
+        return rowVIN|colVIN|rdiVIN|ldiVIN;
     }
 
     public static void randomII(String[][] map) {
@@ -139,8 +259,10 @@ System.out.println("Выигал "+ VINER);
             int i = (int) (1 + Math.random()*(SIZE));
             if (map[j][i].equals(DOT_EMPTY)) {
                 userInOk = true;
-                map[j][i] = Player1;
-                nextPlayer = 0;
+                map[j][i] = player1MARK;
+
+                lastStepJ = j; // запоминаем координаты последнего хода интеллекта
+                lastStepI = i;
             }
         }while (!userInOk);
     }
