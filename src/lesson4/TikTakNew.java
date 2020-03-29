@@ -1,6 +1,5 @@
 package lesson4;
 
-import javax.swing.*;
 import java.util.Scanner;
 
 public class TikTakNew {
@@ -21,6 +20,7 @@ public class TikTakNew {
     public static String END_MESSAGE;
     public static Scanner scan = new Scanner(System.in);
     public static int lastY, lastX; // координаты последнего хода
+    public static boolean gameToEnd = false;
 
 
     // инициация игрового поля размером SIZE
@@ -54,7 +54,9 @@ public class TikTakNew {
     public static void printIntMap(int mapInt[][]) {
         for (int j = 0; j <= SIZE; j++) {
             for (int i = 0; i <= SIZE; i++) {
-                if (mapInt[j][i]<10){System.out.print(" ");}
+                if (mapInt[j][i] < 10) {
+                    System.out.print(" ");
+                }
                 System.out.print(mapInt[j][i] + " ");
             }
             System.out.println();
@@ -129,11 +131,16 @@ public class TikTakNew {
             DOTS_TO_VIN = 3;
         } else {
             System.out.println("Сколько знаков подряд будем считать победой?");
-            DOTS_TO_VIN = userInput();
-            if (DOTS_TO_VIN < 3) {
-                System.out.println("Меньше трех играй один ");
-                DOTS_TO_VIN = 3;
-            }
+            do {
+                DOTS_TO_VIN = userInput();
+                if (DOTS_TO_VIN < 3) {
+                    System.out.println("Меньше трех играй один ");
+                    DOTS_TO_VIN = 3;
+                }
+                if (DOTS_TO_VIN > SIZE) {
+                    System.out.println("Количество знаков выигрышной линии должно быть меньше " + SIZE);
+                }
+            } while (DOTS_TO_VIN > SIZE);
         }
         System.out.println("Победит тот, кто первый поставит в ряд " + DOTS_TO_VIN + " знака");
 
@@ -142,7 +149,7 @@ public class TikTakNew {
         // создаем два поля возможных побед для 0 и Х
         mapX = new int[1 + SIZE][1 + SIZE];
         map0 = new int[1 + SIZE][1 + SIZE];
-        for (int i=1; i<=SIZE; i++){
+        for (int i = 1; i <= SIZE; i++) {
             mapX[0][i] = i;
             mapX[i][0] = i;
             map0[0][i] = i;
@@ -150,7 +157,7 @@ public class TikTakNew {
         }
 
         // рандомный выбор первого игрока
-        nextPlayer = (int) (Math.random()+0.499);
+        nextPlayer = (int) (Math.random() + 0.499);
 //        nextPlayer = 0;
         if (nextPlayer == 0) {
             System.out.println("Я тут подумал что ты ходишь первым!");
@@ -197,10 +204,18 @@ public class TikTakNew {
                 }
                 nextPlayer = 0;
             }
-//            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//            printIntMap(map0);
+
 
             printMap(map);
+            if (!gameToEnd){
+                if (!isVINposiable()){
+                    System.out.println("На игровом поле не осталось места ни для одной выигрышной клмбинации" );
+                    System.out.println("Если согласен на ничью нажми 1, если хочешь играть до конца нажми любую клавишу");
+                    if(scan.nextInt()==1){stepCounter=0;
+                    }else{
+                        gameToEnd=true;}
+                }
+            }
             stepCounter--;
         } while (!VIN & stepCounter > 0);
         System.out.println(END_MESSAGE);
@@ -358,35 +373,36 @@ public class TikTakNew {
     // метод сканирует игровое поле и для каждой ячейки расчитывает количество возможных победных комбинаций
     // результат метода поле возможностей для Х и поле возможностей для 0
     public static void possibleVIN_maps() {
-        for (int i = 1; i<=SIZE; i++){
-            for (int j = 1; j<=SIZE; j++){
+        for (int i = 1; i <= SIZE; i++) {
+            for (int j = 1; j <= SIZE; j++) {
                 map0[i][j] = 0;
                 mapX[i][j] = 0;
             }
         }// сброс массивов
-            
 
         for (int j = 1; j <= SIZE; j++) {
             int lineCount = 0;
-            int xCount =0;
+            int xCount = 0;
             for (int i = 1; i <= SIZE; i++) {
                 if (map[j][i] != DOT_0) {
                     lineCount++;
-                    if (map[j][i] == DOT_X) {xCount++;} //  счетчик Х-ов в нашей комбинации
+                    if (map[j][i] == DOT_X) {
+                        xCount++;
+                    } //  счетчик Х-ов в нашей комбинации
 
                 } else {
                     lineCount = 0;
                 }
                 if (lineCount >= DOTS_TO_VIN) {
-                    for (int s = DOTS_TO_VIN-1; s >= 0; s--) {
-                        if (i-s > 0) {
-                         if (map[j][i-s] != DOT_X) {
-                             mapX[j][i-s]++; // увеличиваем значение на 1 если комбинация возможна
-                             mapX[j][i-s] = mapX[j][i-s]+3*xCount; // увеличиваем значение на количество Х-ов в комбинации
-                             if (map[j][i-s] == DOT_EMPTY) {map0[j][i-s] = map0[j][i-s]+3*xCount;} // увеличиваем вес ячейки в map0 как угрозу
-//                            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                            printIntMap(map0);
-                         }
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (i - s > 0) {
+                            if (map[j][i - s] != DOT_X) {
+                                mapX[j][i - s]++; // увеличиваем значение на 1 если комбинация возможна
+                                mapX[j][i - s] = mapX[j][i - s] + 3 * xCount; // увеличиваем значение на количество Х-ов в комбинации
+                                if (map[j][i - s] == DOT_EMPTY) {
+                                    map0[j][i - s] = map0[j][i - s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в map0 как угрозу
+                            }
                         }
                     }
                 }
@@ -396,101 +412,110 @@ public class TikTakNew {
 
         for (int j = 1; j <= SIZE; j++) {
             int lineCount = 0;
-            int xCount =0;
+            int xCount = 0;
             for (int i = 1; i <= SIZE; i++) {
                 if (map[i][j] != DOT_0) {
                     lineCount++;
-                    if (map[i][j] == DOT_X) {xCount++;} //  счетчик Х-ов в нашей комбинации
+                    if (map[i][j] == DOT_X) {
+                        xCount++;
+                    } //  счетчик Х-ов в нашей комбинации
                 } else {
                     lineCount = 0;
                 }
                 if (lineCount >= DOTS_TO_VIN) {
-                    for (int s = DOTS_TO_VIN-1; s >= 0; s--) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
                         if (i - s > 0) {
-                          if (map[i-s][j] != DOT_X){
-                              mapX[i-s][j]++; // увеличиваем значение на 1 если комбинация возможна
-                              mapX[i-s][j]= mapX[i-s][j]+3*xCount; // увеличиваем значение на количество Х-ов в комбинации
-                              if (map[i-s][j] == DOT_EMPTY){map0[i-s][j] = map0[i-s][j]+3*xCount;} // увеличиваем вес ячейки в map0 как угрозу
-//                              System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                              printIntMap(map0);
-                          }
+                            if (map[i - s][j] != DOT_X) {
+                                mapX[i - s][j]++; // увеличиваем значение на 1 если комбинация возможна
+                                mapX[i - s][j] = mapX[i - s][j] + 3 * xCount; // увеличиваем значение на количество Х-ов в комбинации
+                                if (map[i - s][j] == DOT_EMPTY) {
+                                    map0[i - s][j] = map0[i - s][j] + 3 * xCount;
+                                } // увеличиваем вес ячейки в map0 как угрозу
+                            }
                         }
                     }
                 }
             }
         } // подсчет комбинации для поля mapX в колонках
 
-        for (int j = 1; j <= SIZE-DOTS_TO_VIN+1; j++){
+        for (int j = 1; j <= SIZE - DOTS_TO_VIN + 1; j++) {
             int lineCount = 0;
-            int xCount =0;
-            for (int d = 0; d <= (SIZE-j); d++){
-                if (map[j+d][1+d] != DOT_0) {
+            int xCount = 0;
+            for (int d = 0; d <= (SIZE - j); d++) {
+                if (map[j + d][1 + d] != DOT_0) {
                     lineCount++;
-                    if (map[j+d][1+d] == DOT_X) {xCount++;} //  счетчик Х-ов в нашей комбинации
-                }else{
-                    lineCount=0;
+                    if (map[j + d][1 + d] == DOT_X) {
+                        xCount++;
+                    } //  счетчик Х-ов в нашей комбинации
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){ // если комбинация возможна для победы Х ов
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (1+d-s > 0) {
-                          if (map[j+d-s][1+d-s] != DOT_X) {
-                              mapX[j+d-s][1+d-s]++;// увеличиваем значение на 1 если комбинация возможна
-                              mapX[j+d-s][1+d-s] = mapX[j+d-s][1+d-s]+3*xCount; // увеличиваем значение на количество Х-ов в комбинации
-                              if (map[j+d-s][1+d-s] == DOT_EMPTY){map0[j+d-s][1+d-s] = map0[j+d-s][1+d-s]+3*xCount;} // увеличиваем вес ячейки в map0 как угрозу
-//                              System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                              printIntMap(map0);
-                          }
+                if (lineCount >= DOTS_TO_VIN) { // если комбинация возможна для победы Х ов
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (1 + d - s > 0) {
+                            if (map[j + d - s][1 + d - s] != DOT_X) {
+                                mapX[j + d - s][1 + d - s]++;// увеличиваем значение на 1 если комбинация возможна
+                                mapX[j + d - s][1 + d - s] = mapX[j + d - s][1 + d - s] + 3 * xCount; // увеличиваем значение на количество Х-ов в комбинации
+                                if (map[j + d - s][1 + d - s] == DOT_EMPTY) {
+                                    map0[j + d - s][1 + d - s] = map0[j + d - s][1 + d - s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в map0 как угрозу
+                            }
                         }
                     }
                 }
             }
         }// нижняя половина правых диагоналей mapX
 
-        for (int i = 2; i <= SIZE-DOTS_TO_VIN+1; i++){
+        for (int i = 2; i <= SIZE - DOTS_TO_VIN + 1; i++) {
             int lineCount = 0;
             int xCount = 0;
-            for (int d = 0; d<=SIZE-i; d++){
-                if (map[1+d][i+d]!=DOT_0) {
+            for (int d = 0; d <= SIZE - i; d++) {
+                if (map[1 + d][i + d] != DOT_0) {
                     lineCount++;
-                    if (map[1+d][i+d] == DOT_X) {xCount++;} //  счетчик Х-ов в нашей комбинации
-                }else {
-                    lineCount=0;
+                    if (map[1 + d][i + d] == DOT_X) {
+                        xCount++;
+                    } //  счетчик Х-ов в нашей комбинации
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (1+d-s > 0) {
-                          if (map[1+d-s][i+d-s]!=DOT_X){mapX[1+d-s][i+d-s]++;// увеличиваем значение на 1 если комбинация возможна
-                              mapX[1+d-s][i+d-s]=mapX[1+d-s][i+d-s]+3*xCount; // увеличиваем значение на количество Х-ов в комбинации
-                              if (map[1+d-s][i+d-s] == DOT_EMPTY){map0[1+d-s][i+d-s] = map0[1+d-s][i+d-s]+3*xCount;} // увеличиваем вес ячейки в map0 как угрозу
-//                              System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                              printIntMap(map0);
-                          }
+                if (lineCount >= DOTS_TO_VIN) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (1 + d - s > 0) {
+                            if (map[1 + d - s][i + d - s] != DOT_X) {
+                                mapX[1 + d - s][i + d - s]++;// увеличиваем значение на 1 если комбинация возможна
+                                mapX[1 + d - s][i + d - s] = mapX[1 + d - s][i + d - s] + 3 * xCount; // увеличиваем значение на количество Х-ов в комбинации
+                                if (map[1 + d - s][i + d - s] == DOT_EMPTY) {
+                                    map0[1 + d - s][i + d - s] = map0[1 + d - s][i + d - s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в map0 как угрозу
+                            }
                         }
                     }
                 }
             }
         }// верхняя часть правых диагоналей mapX
 
-        for (int j = 1; j <= SIZE-DOTS_TO_VIN+1; j++){
+        for (int j = 1; j <= SIZE - DOTS_TO_VIN + 1; j++) {
             int lineCount = 0;
             int xCount = 0;
-            for (int d = 0; d <= (SIZE-j); d++){
-                if (map[j+d][SIZE-d] != DOT_0) {
+            for (int d = 0; d <= (SIZE - j); d++) {
+                if (map[j + d][SIZE - d] != DOT_0) {
                     lineCount++;
-                    if (map[j+d][SIZE-d] == DOT_X) {xCount++;} //  счетчик Х-ов в нашей комбинации
+                    if (map[j + d][SIZE - d] == DOT_X) {
+                        xCount++;
+                    } //  счетчик Х-ов в нашей комбинации
 
-                }else{
-                    lineCount=0;
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (SIZE-d+s >= 1) {
-                            if (map[j+d-s][SIZE-d+s] != DOT_X) {
-                                mapX[j+d-s][SIZE-d+s]++;// увеличиваем значение на 1 если комбинация возможна
-                                mapX[j+d-s][SIZE-d+s] = mapX[j+d-s][SIZE-d+s]+3*xCount; // увеличиваем значение на количество Х-ов в комбинации
-                                if (map[j+d-s][SIZE-d+s] == DOT_EMPTY){map0[j+d-s][SIZE-d+s] = map0[j+d-s][SIZE-d+s]+3*xCount;} // увеличиваем вес ячейки в map0 как угрозу
-//                                System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                                printIntMap(map0);
+                if (lineCount >= DOTS_TO_VIN) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (SIZE - d + s >= 1) {
+                            if (map[j + d - s][SIZE - d + s] != DOT_X) {
+                                mapX[j + d - s][SIZE - d + s]++;// увеличиваем значение на 1 если комбинация возможна
+                                mapX[j + d - s][SIZE - d + s] = mapX[j + d - s][SIZE - d + s] + 3 * xCount; // увеличиваем значение на количество Х-ов в комбинации
+                                if (map[j + d - s][SIZE - d + s] == DOT_EMPTY) {
+                                    map0[j + d - s][SIZE - d + s] = map0[j + d - s][SIZE - d + s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в map0 как угрозу
                             }
                         }
                     }
@@ -498,25 +523,27 @@ public class TikTakNew {
             }
         }// нижняя половина левых диагоналей mapX
 
-        for (int i = SIZE-DOTS_TO_VIN+1; i <SIZE ; i++){
+        for (int i = SIZE - DOTS_TO_VIN + 1; i < SIZE; i++) {
             int lineCount = 0;
-            int xCount =0;
-            for (int d = 0; d<i; d++){
-                if (map[i-d][1+d]!=DOT_0) {
+            int xCount = 0;
+            for (int d = 0; d < i; d++) {
+                if (map[i - d][1 + d] != DOT_0) {
                     lineCount++;
-                    if (map[i-d][1+d] == DOT_X) {xCount++;} //  счетчик Х-ов в нашей комбинации
-                }else {
-                    lineCount=0;
+                    if (map[i - d][1 + d] == DOT_X) {
+                        xCount++;
+                    } //  счетчик Х-ов в нашей комбинации
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (i-d+s >= 1) {
-                            if (map[i-d+s][1+d-s]!=DOT_X) {
-                                mapX[i-d+s][1+d-s]++;// увеличиваем значение на 1 если комбинация возможна
-                                mapX[i-d+s][1+d-s] = mapX[i-d+s][1+d-s]+3*xCount;// увеличиваем значение на количество Х-ов в комбинации
-                                if (map[i-d+s][1+d-s] == DOT_EMPTY){map0[i-d+s][1+d-s] = map0[i-d+s][1+d-s]+3*xCount;} // увеличиваем вес ячейки в map0 как угрозу
-//                                System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                                printIntMap(map0);
+                if (lineCount >= DOTS_TO_VIN) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (i - d + s >= 1) {
+                            if (map[i - d + s][1 + d - s] != DOT_X) {
+                                mapX[i - d + s][1 + d - s]++;// увеличиваем значение на 1 если комбинация возможна
+                                mapX[i - d + s][1 + d - s] = mapX[i - d + s][1 + d - s] + 3 * xCount;// увеличиваем значение на количество Х-ов в комбинации
+                                if (map[i - d + s][1 + d - s] == DOT_EMPTY) {
+                                    map0[i - d + s][1 + d - s] = map0[i - d + s][1 + d - s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в map0 как угрозу
                             }
                         }
                     }
@@ -531,12 +558,14 @@ public class TikTakNew {
             for (int i = 1; i <= SIZE; i++) {
                 if (map[j][i] != DOT_X) {
                     lineCount++;
-                    if (map[j][i] == DOT_0) {xCount++;} //  счетчик 0-ей в нашей комбинации
+                    if (map[j][i] == DOT_0) {
+                        xCount++;
+                    } //  счетчик 0-ей в нашей комбинации
                 } else {
                     lineCount = 0;
                 }
                 if (lineCount >= DOTS_TO_VIN) {
-                    for (int s = DOTS_TO_VIN-1; s >= 0; s--) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
                         if (i - s > 0) {
                             if (map[j][i - s] != DOT_0) {
                                 map0[j][i - s]++;// увеличиваем значение на 1 если комбинация возможна
@@ -544,8 +573,6 @@ public class TikTakNew {
                                 if (map[j][i - s] == DOT_EMPTY) {
                                     mapX[j][i - s] = mapX[j][i - s] + 3 * xCount;
                                 } // увеличиваем вес ячейки в mapX как угрозу
-//                            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                            printIntMap(map0);
                             }
                         }
                     }
@@ -556,16 +583,18 @@ public class TikTakNew {
 
         for (int j = 1; j <= SIZE; j++) {
             int lineCount = 0;
-            int xCount =0;
+            int xCount = 0;
             for (int i = 1; i <= SIZE; i++) {
                 if (map[i][j] != DOT_X) {
                     lineCount++;
-                    if (map[i][j] == DOT_0) {xCount++;} //  счетчик 0-ей в нашей комбинации
+                    if (map[i][j] == DOT_0) {
+                        xCount++;
+                    } //  счетчик 0-ей в нашей комбинации
                 } else {
                     lineCount = 0;
                 }
                 if (lineCount >= DOTS_TO_VIN) {
-                    for (int s = DOTS_TO_VIN-1; s >= 0; s--) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
                         if (i - s > 0) {
                             if (map[i - s][j] != DOT_0) {
                                 map0[i - s][j]++;// увеличиваем значение на 1 если комбинация возможна
@@ -573,8 +602,6 @@ public class TikTakNew {
                                 if (map[i - s][j] == DOT_EMPTY) {
                                     mapX[i - s][j] = mapX[i - s][j] + 3 * xCount;
                                 } // увеличиваем вес ячейки в mapX как угрозу
-//                            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                            printIntMap(map0);
                             }
                         }
                     }
@@ -582,27 +609,27 @@ public class TikTakNew {
             }
         } // подсчет комбинации для поля map0 в колонках
 
-        for (int j = 1; j <= SIZE-DOTS_TO_VIN+1; j++){
+        for (int j = 1; j <= SIZE - DOTS_TO_VIN + 1; j++) {
             int lineCount = 0;
-            int xCount =0;
-            for (int d = 0; d <= (SIZE-j); d++){
-                if (map[j+d][1+d] != DOT_X) {
+            int xCount = 0;
+            for (int d = 0; d <= (SIZE - j); d++) {
+                if (map[j + d][1 + d] != DOT_X) {
                     lineCount++;
-                    if (map[j+d][1+d] == DOT_0) {xCount++;} //  счетчик 0-ей в нашей комбинации
-                }else{
-                    lineCount=0;
+                    if (map[j + d][1 + d] == DOT_0) {
+                        xCount++;
+                    } //  счетчик 0-ей в нашей комбинации
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (1+d-s > 0) {
-                            if (map[j+d-s][1+d-s]!=DOT_0) {
+                if (lineCount >= DOTS_TO_VIN) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (1 + d - s > 0) {
+                            if (map[j + d - s][1 + d - s] != DOT_0) {
                                 map0[j + d - s][1 + d - s]++;// увеличиваем значение на 1 если комбинация возможна
                                 map0[j + d - s][1 + d - s] = map0[j + d - s][1 + d - s] + 3 * xCount; // увеличиваем значение  3x количество 0-ов в комбинации
                                 if (map[j + d - s][1 + d - s] == DOT_EMPTY) {
                                     mapX[j + d - s][1 + d - s] = mapX[j + d - s][1 + d - s] + 3 * xCount;
                                 } // увеличиваем вес ячейки в mapX как угрозу
-//                            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                            printIntMap(map0);
                             }
                         }
                     }
@@ -610,26 +637,27 @@ public class TikTakNew {
             }
         }// нижняя половина правых диагоналей map0
 
-        for (int i = 2; i <= SIZE-DOTS_TO_VIN+1; i++){
+        for (int i = 2; i <= SIZE - DOTS_TO_VIN + 1; i++) {
             int lineCount = 0;
-            int xCount =0;
-            for (int d = 0; d<=SIZE-i; d++){
-                if (map[1+d][i+d]!=DOT_X) {
+            int xCount = 0;
+            for (int d = 0; d <= SIZE - i; d++) {
+                if (map[1 + d][i + d] != DOT_X) {
                     lineCount++;
-                    if (map[1+d][i+d] == DOT_0) {xCount++;} //  счетчик 0-ей в нашей комбинации
-                }else {
-                    lineCount=0;
+                    if (map[1 + d][i + d] == DOT_0) {
+                        xCount++;
+                    } //  счетчик 0-ей в нашей комбинации
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (1+d-s > 0) {
-                            if (map[1+d-s][i+d-s]!=DOT_0) {
+                if (lineCount >= DOTS_TO_VIN) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (1 + d - s > 0) {
+                            if (map[1 + d - s][i + d - s] != DOT_0) {
                                 map0[1 + d - s][i + d - s]++;// увеличиваем значение на 1 если комбинация возможна
                                 map0[1 + d - s][i + d - s] = map0[1 + d - s][i + d - s] + 3 * xCount; // увеличиваем значение на 3x количество 0-ов в комбинации
                                 if (map[1 + d - s][i + d - s] == DOT_EMPTY) {
-                                    mapX[1 + d - s][i + d - s] = mapX[1 + d - s][i + d - s] + 3 * xCount; } // увеличиваем вес ячейки в mapX как угрозу
-//                            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                            printIntMap(map0);
+                                    mapX[1 + d - s][i + d - s] = mapX[1 + d - s][i + d - s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в mapX как угрозу
                             }
                         }
                     }
@@ -637,26 +665,27 @@ public class TikTakNew {
             }
         }// верхняя часть правых диагоналей map0
 
-        for (int j = 1; j <= SIZE-DOTS_TO_VIN+1; j++){
+        for (int j = 1; j <= SIZE - DOTS_TO_VIN + 1; j++) {
             int lineCount = 0;
-            int xCount =0;
-            for (int d = 0; d <= (SIZE-j); d++){
-                if (map[j+d][SIZE-d] != DOT_X) {
+            int xCount = 0;
+            for (int d = 0; d <= (SIZE - j); d++) {
+                if (map[j + d][SIZE - d] != DOT_X) {
                     lineCount++;
-                    if (map[j+d][SIZE-d] == DOT_0) {xCount++;} //  счетчик 0-ей в нашей комбинации
-                }else{
-                    lineCount=0;
+                    if (map[j + d][SIZE - d] == DOT_0) {
+                        xCount++;
+                    } //  счетчик 0-ей в нашей комбинации
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (SIZE-d+s >= 1) {
-                            if (map[j+d-s][SIZE-d+s]!=DOT_0) {
+                if (lineCount >= DOTS_TO_VIN) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (SIZE - d + s >= 1) {
+                            if (map[j + d - s][SIZE - d + s] != DOT_0) {
                                 map0[j + d - s][SIZE - d + s]++;// увеличиваем значение на 1 если комбинация возможна
                                 map0[j + d - s][SIZE - d + s] = map0[j + d - s][SIZE - d + s] + 3 * xCount; // увеличиваем значение на 3x количество Х-ов в комбинации
                                 if (map[j + d - s][SIZE - d + s] == DOT_EMPTY) {
-                                    mapX[j + d - s][SIZE - d + s] = mapX[j + d - s][SIZE - d + s] + 3 * xCount; } // увеличиваем вес ячейки в mapX как угрозу
-//                            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                            printIntMap(map0);
+                                    mapX[j + d - s][SIZE - d + s] = mapX[j + d - s][SIZE - d + s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в mapX как угрозу
                             }
                         }
                     }
@@ -664,66 +693,70 @@ public class TikTakNew {
             }
         }// нижняя половина левых диагоналей map0
 
-        for (int i = SIZE-DOTS_TO_VIN+1; i <SIZE ; i++){
+        for (int i = SIZE - DOTS_TO_VIN + 1; i < SIZE; i++) {
             int lineCount = 0;
-            int xCount =0;
-            for (int d = 0; d<i; d++){
-                if (map[i-d][1+d]!=DOT_X) {
+            int xCount = 0;
+            for (int d = 0; d < i; d++) {
+                if (map[i - d][1 + d] != DOT_X) {
                     lineCount++;
-                    if (map[i-d][1+d] == DOT_0) {xCount++;} //  счетчик 0-ей в нашей комбинации
-                }else {
-                    lineCount=0;
+                    if (map[i - d][1 + d] == DOT_0) {
+                        xCount++;
+                    } //  счетчик 0-ей в нашей комбинации
+                } else {
+                    lineCount = 0;
                 }
-                if (lineCount>=DOTS_TO_VIN){
-                    for (int s = DOTS_TO_VIN-1; s>=0; s--){
-                        if (i-d+s >= 1) {
-                           if(map[i-d+s][1+d-s]!=DOT_0) {
-                               map0[i-d+s][1+d-s]++;// увеличиваем значение на 1 если комбинация возможна
-                               map0[i-d+s][1+d-s] = map0[i-d+s][1+d-s] + 3*xCount; // увеличиваем значение на 3x количество Х-ов в комбинации
-                               if (map[i-d+s][1+d-s] == DOT_EMPTY) {
-                                   mapX[i-d+s][1+d-s] = mapX[i-d+s][1+d-s] + 3*xCount; } // увеличиваем вес ячейки в mapX как угрозу
-//                            System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-//                            printIntMap(map0);
-                           }
+                if (lineCount >= DOTS_TO_VIN) {
+                    for (int s = DOTS_TO_VIN - 1; s >= 0; s--) {
+                        if (i - d + s >= 1) {
+                            if (map[i - d + s][1 + d - s] != DOT_0) {
+                                map0[i - d + s][1 + d - s]++;// увеличиваем значение на 1 если комбинация возможна
+                                map0[i - d + s][1 + d - s] = map0[i - d + s][1 + d - s] + 3 * xCount; // увеличиваем значение на 3x количество Х-ов в комбинации
+                                if (map[i - d + s][1 + d - s] == DOT_EMPTY) {
+                                    mapX[i - d + s][1 + d - s] = mapX[i - d + s][1 + d - s] + 3 * xCount;
+                                } // увеличиваем вес ячейки в mapX как угрозу
+                            }
                         }
                     }
                 }
             }
         }// верхняя часть левых диагоналей map0
-        System.out.println("= = = = = = m a p X = = = = = = = = = = = =");
-        printIntMap(mapX);
-        System.out.println("= = = = = = m a p 0 = = = = = = = = = = = =");
-        printIntMap(map0);
-        }
+    }
 
     // метот определяющий координаты свободной ячейки которая наибольший вес в поле решений для переданного аргумента
     // в качетве аргумента методу надо сообщить для какого символа надо искать решение
-    public static void bestTurn(String playerMARK){
+    public static void bestTurn(String playerMARK) {
         int playerMap[][];
-        int MAX =0;
-        int maxJ=0;
-        int maxI=0;
-        if (playerMARK == DOT_X){ playerMap = mapX;}
-        else { playerMap = map0;}
+        int MAX = 0;
+        int maxJ = 0;
+        int maxI = 0;
+        if (playerMARK == DOT_X) {
+            playerMap = mapX;
+        } else {
+            playerMap = map0;
+        }
 
-        for (int j = 1; j<=SIZE; j++){
-            for (int i =1; i<=SIZE; i++){
+        for (int j = 1; j <= SIZE; j++) {
+            for (int i = 1; i <= SIZE; i++) {
                 if (MAX <= playerMap[j][i]) {
                     MAX = playerMap[j][i];
-                    maxI = i; maxJ = j;
+                    maxI = i;
+                    maxJ = j;
                 }
             }
         }
-        if (map[maxJ][maxI] == DOT_EMPTY){ lastY = maxJ; lastX = maxI;}
+        if (map[maxJ][maxI] == DOT_EMPTY) {
+            lastY = maxJ;
+            lastX = maxI;
+        }
     }
 
     // метод устанавливает в свободную ячейку марку игрока и спомощью метода checkVIN определяет является ли эта ячейка
     // угрозой, если да, то вес ячейки в обоих массивах возможностей увеличивается на 10. Ячейке устанавливается исходное состояние.
-    public static void check2VIN(String MARK){
+    public static void check2VIN(String MARK) {
         int j, i;
-        for (j=1; j<=SIZE; j++){
-            for (i=1; i<=SIZE; i++){
-                if (map[j][i]==DOT_EMPTY) {
+        for (j = 1; j <= SIZE; j++) {
+            for (i = 1; i <= SIZE; i++) {
+                if (map[j][i] == DOT_EMPTY) {
                     map[j][i] = MARK;
                     if (checkVIN(MARK, j, i)) {
                         mapX[j][i] = mapX[j][i] + 20;
@@ -737,12 +770,12 @@ public class TikTakNew {
                                 if (map[k][l] == DOT_EMPTY) {
                                     toVIN = checkVIN(MARK, k, l);
                                     if (toVIN) {
-                                    mapX[j][i] = mapX[j][i] + 5;
-                                    map0[j][i] = map0[j][i] + 5;
-                                    mapX[k][l] = mapX[k][l] + 5;
-                                    map0[k][l] = map0[k][l] + 5;
-                                    // тут надо добавку веса ячейкам если они не рядом j-k>1 i-l>1
-                                        if (Math.abs(j-k)>1&&Math.abs(i-l)>1){
+                                        mapX[j][i] = mapX[j][i] + 5;
+                                        map0[j][i] = map0[j][i] + 5;
+                                        mapX[k][l] = mapX[k][l] + 5;
+                                        map0[k][l] = map0[k][l] + 5;
+                                        // тут надо добавку веса ячейкам если они не рядом j-k>1 i-l>1
+                                        if (Math.abs(j - k) > 1 && Math.abs(i - l) > 1) {
                                             mapX[j][i] = mapX[j][i] + 10;
                                             map0[j][i] = map0[j][i] + 10;
                                             mapX[k][l] = mapX[k][l] + 10;
@@ -753,12 +786,24 @@ public class TikTakNew {
                             }
                         }
                     }
-                    map[j][i]=DOT_EMPTY;
+                    map[j][i] = DOT_EMPTY;
                 }
             }
         }
     }
 
-
-
+    // метод сравнивающий все элементы массивов mapX и map0 и возвращающий false если все = 0.
+    public static boolean isVINposiable() {
+        possibleVIN_maps();
+        boolean vinPosiable = false;
+        for (int j=1; j<=SIZE; j++){
+            for (int i=1; i<=SIZE; i++){
+                if (mapX[j][i]>0){vinPosiable=true;}
+                if (map0[j][i]>0){vinPosiable=true;}
+            }
+        }
+        System.out.println(vinPosiable);
+        return vinPosiable;
     }
+
+}
