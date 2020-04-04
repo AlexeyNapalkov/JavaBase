@@ -1,6 +1,6 @@
 package lesson7;
 
-
+// TODO тарелка должна создавать событие когда в неё кладут еду
 
 public class Plate {
 
@@ -29,7 +29,11 @@ public class Plate {
 
     public void decreaseFood(int foodEat) {
         food -= foodEat;
-        if (food <= 0){}
+        if (food <= 0){
+            System.out.println("тарелка пуста");
+        }else {
+            System.out.println("в тарелке осталось " + food + " еды");
+        };
     }
     @Override
     public String toString() {

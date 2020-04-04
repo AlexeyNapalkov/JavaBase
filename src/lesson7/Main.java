@@ -1,19 +1,45 @@
 package lesson7;
-//TODO
-// 4. Создать массив котов тарелку с едой, попросить всех котов покушать эз этой тарелки
-// и потом вывести информацию о сытости котов в консоль
-// из класса Plate сделать Observer, котрый приглашает котов есть если в миску попала еда.
-public class Main {
-    public static void main(String[] args) {
 
-        Cat cat = new Cat("Рыжик", 5);
-        Plate plate = new Plate(5);
-        plate.info();
-        cat.eat(plate);
-        plate.info();
-        cat.eat(plate);
-        plate.info();
-        plate.addFood(10); //Observer
-        plate.info();
+
+public class Main {
+
+    public static void main(String[] args) {
+        String s;
+        // Создаем массив котов и раздаем им имена и случайный аппетит.
+        String[] names = {"Мартин", "Матроскин", "Барсик", "Васька", "Рыжик", "Пират", "Пушок", "Тимошка"};
+        Cat[] cats = new Cat[5];
+        for (int i = 0; i < cats.length; i++) {
+            if (i < names.length) {
+                cats[i] = new Cat(names[i], (int)(Math.random()*6));
+            } else {
+                cats[i] = new Cat("Кот" + i, (int)(Math.random()*6));
+            }
+        }
+        // Создаем тарелку
+        Plate plate = new Plate(0);
+
+        //TODO подписываем всех котов на тарелку
+
+        //кладем в тареку еду
+        plate.addFood(10);
+
+        //TODO оповещаем котов о еде в тарелке по событию.
+
+        // пока нет обсервера кормим всех по очереди
+        for (Cat cat : cats) {
+            cat.eat(plate);
+        }
+
+        // выводим в консоль информацию о сытости котов
+        for (Cat cat : cats) {
+            if (cat.isSatiety()) {
+                s = "сыт";
+            } else {
+                s = "голоден";
+            }
+            ;
+            System.out.println(cat.getName() + " " + s);
+        }
+
     }
 }
