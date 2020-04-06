@@ -2,6 +2,9 @@ package lesson6;
 
 public abstract class Animal {
     static int quantity;
+    protected int maxRunDistance;
+    protected int maxSwimDistance;
+
     private String name;
 
     public Animal(String name) {
